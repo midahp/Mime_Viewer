@@ -92,13 +92,12 @@ class Horde_Mime_Viewer_Ooo extends Horde_Mime_Viewer_Base
                         'info' => $list,
                         'key' => $key
                     ));
-
                 if ($has_xsl) {
                     file_put_contents($tmpdir . $file['name'], $content);
                 } elseif ($file['name'] == 'content.xml') {
                     return array(
                         $this->_mimepart->getMimeId() => array(
-                            'data' => str_replace(array_keys($tags), array_values($tags), $content),
+                            'data' => str_replace(array_keys($tags), array_values($tags), Horde_Text_Filter::filter($content, 'xss')),
                             'status' => array(),
                             'type' => 'text/html; charset=UTF-8'
                         )
@@ -123,7 +122,9 @@ class Horde_Mime_Viewer_Ooo extends Horde_Mime_Viewer_Base
         $xml = new DOMDocument();
         $xml->load(realpath($tmpdir . 'content.xml'));
         $result = $xslt->transformToXml($xml);
-        if (!$result) {
+        if ($result) {
+            $result = Horde_Text_Filter::filter($result, 'xss');
+        } else {
             $result = libxml_get_last_error()->message;
         }
 
